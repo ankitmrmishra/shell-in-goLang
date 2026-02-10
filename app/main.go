@@ -13,9 +13,14 @@ func main() {
 	for {
 fmt.Print("$ ")
 	var command string
+	var echotext string
 	fmt.Scanln(&command)
 	if(command == "exit"){
 		break
+	}
+	if(command == "echo"){
+		fmt.Scanln(&echotext)
+		fmt.Println(echotext)
 	}
 	fmt.Println(command + ": command not found")
 	}
