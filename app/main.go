@@ -12,5 +12,5 @@ func main() {
 	fmt.Print("$ ")
 	var command string
 	fmt.Scanln(&command)
-	fmt.Print(command + ": command not  found")
+	fmt.Print(command + ": command not found")
 }
