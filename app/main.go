@@ -11,10 +11,10 @@ func main() {
 	// TODO: Uncomment the code below to pass the first stage
 
 	for {
-fmt.Print("$ ")
+fmt.Println("$ ")
 	var command string
 	fmt.Scanln(&command)
-	fmt.Print(command + ": command not found")
+	fmt.Println(command + ": command not found")
 	}
 	
 }
