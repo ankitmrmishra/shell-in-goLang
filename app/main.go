@@ -14,6 +14,9 @@ func main() {
 fmt.Print("$ ")
 	var command string
 	fmt.Scanln(&command)
+	if(command == "exit"){
+		break
+	}
 	fmt.Println(command + ": command not found")
 	}
 	
