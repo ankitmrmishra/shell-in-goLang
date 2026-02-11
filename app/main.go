@@ -65,14 +65,15 @@ func main() {
 				fmt.Println(targetCommand + ": not found")
 			}
 			continue
-		}
-		
-			path, err := exec.LookPath(command)
+		} else {
+path, err := exec.LookPath(command)
 			args := strings.Join(words[1:], " ")
 
 			if err == nil{
 				exec.Command(path, args)
 			}
+		}
+			
 		// Unknown command
 		fmt.Println(command + ": command not found")
 	}
