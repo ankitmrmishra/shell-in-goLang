@@ -132,11 +132,7 @@ func handlePwd()  {
 func changeDirectoray(dir string) {
 	
 	os.Chdir(dir)
-	path, err := os.Getwd()
-    if err != nil {
-        fmt.Println("pwd:", err)
-        return
-    }
-    fmt.Println(path)
+	
+ 
 
 }
