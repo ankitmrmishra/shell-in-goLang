@@ -46,7 +46,7 @@ func main() {
 			if(secondCommand == "echo" || secondCommand == "exit" || secondCommand == "type"){
 				fmt.Println(secondCommand , "is a shell builtin")
 			} else {
-						fmt.Println(secondCommand , ": not found")	
+						fmt.Println(secondCommand, ": not found")	
 			}
 			continue
 		}
