@@ -48,6 +48,7 @@ func main() {
 			} else {
 						fmt.Println(secondCommand , ": not found")	
 			}
+			continue
 		}
 		
 		// Unknown command
