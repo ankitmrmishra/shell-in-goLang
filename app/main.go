@@ -41,12 +41,22 @@ func main() {
 			fmt.Println(strings.Join(words[1:], " "))
 			continue
 		}
-		if(command == "type"){
-			secondCommand := words[1]
-			if(secondCommand == "echo" || secondCommand == "exit" || secondCommand == "type"){
-				fmt.Println(secondCommand , "is a shell builtin")
+		
+		// Handle type command
+		if command == "type" {
+			// Check if we have enough arguments
+			if len(words) < 2 {
+				fmt.Println("type: missing argument")
+				continue
+			}
+			
+			targetCommand := words[1]
+			
+			// Check if it's a builtin command
+			if isBuiltin(targetCommand) {
+				fmt.Println(targetCommand, "is a shell builtin")
 			} else {
-						fmt.Println(secondCommand + ": not found")	
+				fmt.Println(targetCommand + ": not found")
 			}
 			continue
 		}
@@ -54,4 +64,17 @@ func main() {
 		// Unknown command
 		fmt.Println(command + ": command not found")
 	}
+}
+
+// isBuiltin checks if a command is a shell builtin
+func isBuiltin(cmd string) bool {
+	builtins := []string{"echo", "exit", "type"}
+	
+	for _, builtin := range builtins {
+		if cmd == builtin {
+			return true
+		}
+	}
+	
+	return false
 }
