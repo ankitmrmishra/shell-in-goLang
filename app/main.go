@@ -132,7 +132,11 @@ func handlePwd()  {
 func changeDirectoray(dir string) {
 	
 	os.Chdir(dir)
-	
+	path, err := os.Getwd()
+    if err != nil {
+        fmt.Println("cd:" + path + ": No such file or directory")
+        return
+    }
  
 
 }
