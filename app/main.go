@@ -51,6 +51,9 @@ func main() {
 		case "pwd":
             handlePwd()
 			continue
+
+	    case "cd":
+            changeDirectoray(words[1])
 		}
 	
 
@@ -104,7 +107,7 @@ func runExternal(command string, args []string) bool {
 
 // isBuiltin checks if a command is a shell builtin
 func isBuiltin(cmd string) bool {
-	builtins := []string{"echo", "exit", "type", "pwd"}
+	builtins := []string{"echo", "exit", "type", "pwd", "cd"}
 
 	for _, builtin := range builtins {
 		if cmd == builtin {
@@ -116,11 +119,16 @@ func isBuiltin(cmd string) bool {
 }
 
 
-func handlePwd() {
+func handlePwd()  {
     path, err := os.Getwd()
     if err != nil {
         fmt.Println("pwd:", err)
         return
     }
     fmt.Println(path)
+}
+
+func changeDirectoray(dir string) {
+	
+	os.Chdir(dir)
 }
