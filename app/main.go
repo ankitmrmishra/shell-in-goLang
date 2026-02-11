@@ -71,6 +71,8 @@ path, err := exec.LookPath(command)
 
 			if err == nil{
 				cmd := exec.Command(path, words[1:]...)
+				cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
 				cmd.Run()
 			}
 		}
