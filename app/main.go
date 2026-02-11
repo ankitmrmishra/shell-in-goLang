@@ -121,5 +121,5 @@ func handlePwd() string{
 	if err == nil{
 		return path
 	}
-	return ""
+	return  path
 }
