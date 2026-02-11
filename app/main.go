@@ -48,7 +48,11 @@ func main() {
 		case "type":
 			handleType(words)
 			continue
+		case "pwd":
+            handlePwd()
+			continue
 		}
+	
 
 		// Handle external commands
 		if runExternal(command, words[1:]) {
@@ -100,7 +104,7 @@ func runExternal(command string, args []string) bool {
 
 // isBuiltin checks if a command is a shell builtin
 func isBuiltin(cmd string) bool {
-	builtins := []string{"echo", "exit", "type"}
+	builtins := []string{"echo", "exit", "type", "pwd"}
 
 	for _, builtin := range builtins {
 		if cmd == builtin {
@@ -109,4 +113,13 @@ func isBuiltin(cmd string) bool {
 	}
 
 	return false
+}
+
+
+func handlePwd() string{
+	path, err := os.Executable()
+	if err == nil{
+		return path
+	}
+	return ""
 }
