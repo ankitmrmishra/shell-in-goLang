@@ -116,10 +116,11 @@ func isBuiltin(cmd string) bool {
 }
 
 
-func handlePwd() string{
-	path, err := os.Executable()
-	if err == nil{
-		return path
-	}
-	return  path
+func handlePwd() {
+    path, err := os.Getwd()
+    if err != nil {
+        fmt.Println("pwd:", err)
+        return
+    }
+    fmt.Println(path)
 }
