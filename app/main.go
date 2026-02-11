@@ -133,7 +133,7 @@ func changeDirectoray(dir string) {
 	
 	
 	_, err := os.Stat(dir)
-    if err == nil {
+    if err != nil {
         fmt.Println("cd:" + dir + ": No such file or directory")
         return
     }
