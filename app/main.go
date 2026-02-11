@@ -37,7 +37,7 @@ func main() {
 
 		// Handle exit command
 		case "exit":
-			break
+			return
 
 		// Handle echo command
 		case "echo":
