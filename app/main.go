@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -67,11 +68,12 @@ func main() {
 			continue
 		} else {
 path, err := exec.LookPath(command)
+name := filepath.Base(path)
 			
 
 			if err == nil{
-				pathToExecute := strings.Split(path, "") 
-				cmd := exec.Command(pathToExecute[len(pathToExecute) - 1], words[1:]...)
+				
+				cmd := exec.Command(name, words[1:]...)
 				cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
 				cmd.Run()
