@@ -77,8 +77,10 @@ name := filepath.Base(path)
 				cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
 				cmd.Run()
+				continue
 			}
-			continue
+		
+
 		}
 			
 		// Unknown command
