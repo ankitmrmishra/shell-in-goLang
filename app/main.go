@@ -67,10 +67,11 @@ func main() {
 			continue
 		} else {
 path, err := exec.LookPath(command)
-			args := strings.Join(words[1:], " ")
+			
 
 			if err == nil{
-				exec.Command(path, args)
+				cmd := exec.Command(path, words[1:]...)
+				cmd.Run()
 			}
 		}
 			
