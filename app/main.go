@@ -60,12 +60,19 @@ func main() {
 				fmt.Println(targetCommand, "is a shell builtin")
 			} else if err == nil  {
                 fmt.Println(targetCommand + " is " + path)
+
 			} else {
 				fmt.Println(targetCommand + ": not found")
 			}
 			continue
 		}
 		
+			path, err := exec.LookPath(command)
+			args := strings.Join(words[1:], " ")
+
+			if err == nil{
+				exec.Command(path, args)
+			}
 		// Unknown command
 		fmt.Println(command + ": command not found")
 	}
