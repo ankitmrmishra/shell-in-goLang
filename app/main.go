@@ -15,88 +15,98 @@ var _ = fmt.Print
 func main() {
 	// TODO: Uncomment the code below to pass the first stage
 	scanner := bufio.NewScanner(os.Stdin)
-	
+
 	for {
 		fmt.Print("$ ")
-		
+
 		if !scanner.Scan() {
 			return
 		}
-		
+
 		line := scanner.Text()
 		words := strings.Fields(line)
-		
+
 		// Skip empty input
 		if len(words) == 0 {
 			continue
 		}
-		
+
 		command := words[0]
-		
+
+		switch command {
+
 		// Handle exit command
-		if command == "exit" {
+		case "exit":
 			break
-		}
-		
+
 		// Handle echo command
-		if command == "echo" {
+		case "echo":
 			fmt.Println(strings.Join(words[1:], " "))
 			continue
-		}
-		
+
 		// Handle type command
-		if command == "type" {
-			// Check if we have enough arguments
-			if len(words) < 2 {
-				fmt.Println("type: missing argument")
-				continue
-			}
-			
-			
-			targetCommand := words[1]
-			path, err := exec.LookPath(targetCommand)
-			
-			// Check if it's a builtin command
-			if isBuiltin(targetCommand) {
-				fmt.Println(targetCommand, "is a shell builtin")
-			} else if err == nil  {
-                fmt.Println(targetCommand + " is " + path)
-
-			} else {
-				fmt.Println(targetCommand + ": not found")
-			}
+		case "type":
+			handleType(words)
 			continue
-		} else {
-path, err := exec.LookPath(command)
-name := filepath.Base(path)
-			
-
-			if err == nil{
-				
-				cmd := exec.Command(name, words[1:]...)
-				cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
-				cmd.Run()
-				continue
-			}
-		
-
 		}
-			
+
+		// Handle external commands
+		if runExternal(command, words[1:]) {
+			continue
+		}
+
 		// Unknown command
 		fmt.Println(command + ": command not found")
 	}
 }
 
+// handleType processes the `type` builtin command
+func handleType(words []string) {
+	// Check if we have enough arguments
+	if len(words) < 2 {
+		fmt.Println("type: missing argument")
+		return
+	}
+
+	targetCommand := words[1]
+	path, err := exec.LookPath(targetCommand)
+
+	// Check if it's a builtin command
+	if isBuiltin(targetCommand) {
+		fmt.Println(targetCommand, "is a shell builtin")
+	} else if err == nil {
+		fmt.Println(targetCommand + " is " + path)
+	} else {
+		fmt.Println(targetCommand + ": not found")
+	}
+}
+
+// runExternal tries to execute an external program
+func runExternal(command string, args []string) bool {
+	path, err := exec.LookPath(command)
+	if err != nil {
+		return false
+	}
+
+	name := filepath.Base(path)
+
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	_ = cmd.Run()
+	return true
+}
+
 // isBuiltin checks if a command is a shell builtin
 func isBuiltin(cmd string) bool {
 	builtins := []string{"echo", "exit", "type"}
-	
+
 	for _, builtin := range builtins {
 		if cmd == builtin {
 			return true
 		}
 	}
-	
+
 	return false
 }
