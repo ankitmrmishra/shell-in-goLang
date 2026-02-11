@@ -41,6 +41,14 @@ func main() {
 			fmt.Println(strings.Join(words[1:], " "))
 			continue
 		}
+		if(command == "type"){
+			secondCommand := words[1]
+			if(secondCommand == "echo" || secondCommand == "exit" || secondCommand == "type"){
+				fmt.Println(secondCommand , "is a shell builtin")
+			} else {
+						fmt.Println(secondCommand , ": not found")	
+			}
+		}
 		
 		// Unknown command
 		fmt.Println(command + ": command not found")
