@@ -130,7 +130,11 @@ func handlePwd()  {
 }
 
 func changeDirectoray(dir string) {
-	
+	if dir == "~"{
+        path, _ := os.UserHomeDir()
+		os.Chdir(path)
+		return
+	}
 	
 	_, err := os.Stat(dir)
     if err != nil {
