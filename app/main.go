@@ -15,7 +15,11 @@ func main() {
    scanner := bufio.NewScanner(os.Stdin)
 	for {
 fmt.Print("$ ")
+if !scanner.Scan() {
+			return
+		}
 	line := scanner.Text()
+	
 
 	words := strings.Fields(line)
 	if(len(words) == 0) {
