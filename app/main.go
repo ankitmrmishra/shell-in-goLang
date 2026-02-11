@@ -54,6 +54,7 @@ func main() {
 
 	    case "cd":
             changeDirectoray(words[1])
+			continue
 		}
 	
 
