@@ -12,31 +12,37 @@ var _ = fmt.Print
 
 func main() {
 	// TODO: Uncomment the code below to pass the first stage
-   scanner := bufio.NewScanner(os.Stdin)
+	scanner := bufio.NewScanner(os.Stdin)
+	
 	for {
-fmt.Print("$ ")
-if !scanner.Scan() {
+		fmt.Print("$ ")
+		
+		if !scanner.Scan() {
 			return
 		}
-	line := scanner.Text()
-	
-
-	words := strings.Fields(line)
-	if(len(words) == 0) {
-		continue
+		
+		line := scanner.Text()
+		words := strings.Fields(line)
+		
+		// Skip empty input
+		if len(words) == 0 {
+			continue
+		}
+		
+		command := words[0]
+		
+		// Handle exit command
+		if command == "exit" {
+			break
+		}
+		
+		// Handle echo command
+		if command == "echo" {
+			fmt.Println(strings.Join(words[1:], " "))
+			continue
+		}
+		
+		// Unknown command
+		fmt.Println(command + ": command not found")
 	}
-
-	if(words[0] == "exit"){
-		break
-	}
-    if(words[0] == "echo"){
-	fmt.Println(strings.Join(words[1:], " "))
-			continue	
-	}
-	
-	
-	
-	fmt.Println(words[0] + ": command not found")
-	}
-	
 }
