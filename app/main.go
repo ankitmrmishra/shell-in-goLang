@@ -75,7 +75,7 @@ path, err := exec.LookPath(command)
 		}
 			
 		// Unknown command
-		fmt.Println(command + ": command not found")
+		// fmt.Println(command + ": command not found")
 	}
 }
 
