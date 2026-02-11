@@ -70,7 +70,8 @@ path, err := exec.LookPath(command)
 			
 
 			if err == nil{
-				cmd := exec.Command(path, words[1:]...)
+				pathToExecute := strings.Split(path, "") 
+				cmd := exec.Command(pathToExecute[len(pathToExecute) - 1], words[1:]...)
 				cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
 				cmd.Run()
