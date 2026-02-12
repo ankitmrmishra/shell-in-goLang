@@ -73,13 +73,16 @@ func parsefunction(line string) []string{
 	var words []string
     var currentWord strings.Builder
 	inSingleQuote := false
+	inDoubleQuote := false
 
 	for i := 0; i <len(line); i++{
 		ch := line[i]
 
-		if ch == '\''{
+		if ch == '\'' && !inDoubleQuote  {
            inSingleQuote = !inSingleQuote
-		} else if inSingleQuote{
+		} else if ch == '"' && !inSingleQuote {
+         inDoubleQuote = !inDoubleQuote
+		} else if inSingleQuote || inDoubleQuote{
 			currentWord.WriteByte(ch)
 		} else if ch == ' ' || ch == '\t'{
 			if currentWord.Len() > 0 {
