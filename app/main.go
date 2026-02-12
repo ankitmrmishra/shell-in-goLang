@@ -84,7 +84,21 @@ func parsefunction(line string) []string{
            currentWord.WriteByte(line[i])
        }
        continue
-		} else if ch == '\'' && !inDoubleQuote  {
+		} else if  ch == '\\' && inDoubleQuote  {
+        // Look at the NEXT character
+        if i+1 < len(line) {
+            nextCh := line[i+1]
+            // Only escape specific characters
+            if nextCh == '"' || nextCh == '\\' {
+                i++ // Skip the backslash
+                currentWord.WriteByte(nextCh) // Add the escaped char
+                continue
+            }
+        }
+        // If not escaping special char, add backslash literally
+        currentWord.WriteByte(ch)
+        continue
+    } else if ch == '\'' && !inDoubleQuote  {
            inSingleQuote = !inSingleQuote
 		} else if ch == '"' && !inSingleQuote {
          inDoubleQuote = !inDoubleQuote
