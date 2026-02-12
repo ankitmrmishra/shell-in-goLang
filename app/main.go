@@ -77,7 +77,14 @@ func parsefunction(line string) []string{
 
 	for i := 0; i <len(line); i++{
 		ch := line[i]
-
+        if ch == '\\' && (!inDoubleQuote || !inSingleQuote) {
+          i++  // Move to next character
+       if i < len(line) {
+           // Add the next character literally
+           currentWord.WriteByte(line[i])
+       }
+       continue
+		}
 		if ch == '\'' && !inDoubleQuote  {
            inSingleQuote = !inSingleQuote
 		} else if ch == '"' && !inSingleQuote {
