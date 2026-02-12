@@ -24,7 +24,7 @@ func main() {
 		}
 
 		line := scanner.Text()
-		words := strings.Fields(line)
+		words := parsefunction(line)
 
 		// Skip empty input
 		if len(words) == 0 {
@@ -67,6 +67,38 @@ func main() {
 		fmt.Println(command + ": command not found")
 	}
 }
+
+// parsing the single quotes here 
+func parsefunction(line string) []string{
+	var words []string
+    var currentWord strings.Builder
+	inSingleQuote := false
+
+	for i := 0; i <len(line); i++{
+		ch := line[i]
+
+		if ch == '\''{
+           inSingleQuote = !inSingleQuote
+		} else if inSingleQuote{
+			currentWord.WriteByte(ch)
+		} else if ch == ' ' || ch == '\t'{
+			if currentWord.Len() > 0 {
+				words = append(words, currentWord.String())
+				currentWord.Reset()
+			}
+		} else {
+			// Regular character outside quotes
+			currentWord.WriteByte(ch)
+		}
+	}
+	if currentWord.Len() > 0 {
+		words = append(words, currentWord.String())
+	}
+
+	return words
+}
+
+
 
 // handleType processes the `type` builtin command
 func handleType(words []string) {
