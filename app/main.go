@@ -31,12 +31,23 @@ func main() {
 			continue
 		}
 
-		words, redirectFile := getRedirect(words)
+		words, stdOutFile, stdErrFile := getRedirect(words)
 
-		// NEW: figure out where to write output
-		outFile := os.Stdout // default: terminal
-		if redirectFile != "" {
-			f, err := os.Create(redirectFile)
+	
+		outFile := os.Stdout 
+		if stdOutFile != "" {
+			f, err := os.Create(stdOutFile)
+			if err != nil {
+				fmt.Println("Error:", err)
+				continue
+			}
+			defer f.Close()
+			outFile = f // write to file instead
+		}
+
+		errFile := os.Stdout 
+		if stdErrFile != "" {
+			f, err := os.Create(stdErrFile)
 			if err != nil {
 				fmt.Println("Error:", err)
 				continue
@@ -73,7 +84,7 @@ func main() {
 	
 
 		// Handle external commands
-		if runExternal(command, words[1:], outFile) {
+		if runExternal(command, words[1:], outFile, errFile) {
 			continue
 		}
 
@@ -85,15 +96,16 @@ func main() {
 
 
 // to get the redirect file name and text 
-func getRedirect(words []string) ([]string, string) {
-	for i, w := range words {
-		if w == ">" || w == "1>" {
-			filename := words[i+1]
-			cleanWords := words[:i]
-			return cleanWords, filename
-		}
-	}
-	return words, ""
+func getRedirect(words []string) ([]string, string, string) {
+    for i, w := range words {
+        if w == ">" || w == "1>" {
+            return words[:i], words[i+1], ""          // stdoutFile, stderrFile
+        }
+        if w == "2>" {
+            return words[:i], "", words[i+1]          // stdoutFile, stderrFile
+        }
+    }
+    return words, "", ""
 }
 
 // parsing the single quotes here 
@@ -173,7 +185,7 @@ func handleType(words []string) {
 }
 
 // runExternal tries to execute an external program
-func runExternal(command string, args []string, outFile *os.File) bool {
+func runExternal(command string, args []string, outFile *os.File, errFile *os.File) bool {
 	path, err := exec.LookPath(command)
 	if err != nil {
 		return false
@@ -183,7 +195,7 @@ func runExternal(command string, args []string, outFile *os.File) bool {
 
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = outFile
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = errFile
 
 	_ = cmd.Run()
 	return true
