@@ -66,7 +66,7 @@ func main() {
 
 		// Handle echo command
 		case "echo":
-			fmt.Fprintln(outFile, strings.Join(words[1:], " "))
+			fmt.Fprintln(outFile, errFile, strings.Join(words[1:], " "))
 			continue
 
 		// Handle type command
