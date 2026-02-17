@@ -36,7 +36,7 @@ func main() {
 	
 		outFile := os.Stdout 
 		if stdOutFile != "" {
-			f, err := os.Create(stdOutFile)
+		    f, err := os.OpenFile(stdOutFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				fmt.Println("Error:", err)
 				continue
@@ -98,12 +98,13 @@ func main() {
 // to get the redirect file name and text 
 func getRedirect(words []string) ([]string, string, string) {
     for i, w := range words {
-        if w == ">" || w == "1>" {
-            return words[:i], words[i+1], ""          // stdoutFile, stderrFile
+        if w == ">" || w == "1>" || w == ">>" || w == "1>>" {
+            return words[:i], words[i+1], ""          
         }
         if w == "2>" {
-            return words[:i], "", words[i+1]          // stdoutFile, stderrFile
+            return words[:i], "", words[i+1]          
         }
+		
     }
     return words, "", ""
 }
