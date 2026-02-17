@@ -31,6 +31,20 @@ func main() {
 			continue
 		}
 
+		words, redirectFile := getRedirect(words)
+
+		// NEW: figure out where to write output
+		outFile := os.Stdout // default: terminal
+		if redirectFile != "" {
+			f, err := os.Create(redirectFile)
+			if err != nil {
+				fmt.Println("Error:", err)
+				continue
+			}
+			defer f.Close()
+			outFile = f // write to file instead
+		}
+
 		command := words[0]
 
 		switch command {
@@ -41,7 +55,7 @@ func main() {
 
 		// Handle echo command
 		case "echo":
-			fmt.Println(strings.Join(words[1:], " "))
+			fmt.Fprintln(outFile, strings.Join(words[1:], " "))
 			continue
 
 		// Handle type command
@@ -59,13 +73,27 @@ func main() {
 	
 
 		// Handle external commands
-		if runExternal(command, words[1:]) {
+		if runExternal(command, words[1:], outFile) {
 			continue
 		}
 
 		// Unknown command
 		fmt.Println(command + ": command not found")
 	}
+}
+
+
+
+// to get the redirect file name and text 
+func getRedirect(words []string) ([]string, string) {
+	for i, w := range words {
+		if w == ">" || w == "1>" {
+			filename := words[i+1]
+			cleanWords := words[:i]
+			return cleanWords, filename
+		}
+	}
+	return words, ""
 }
 
 // parsing the single quotes here 
@@ -145,7 +173,7 @@ func handleType(words []string) {
 }
 
 // runExternal tries to execute an external program
-func runExternal(command string, args []string) bool {
+func runExternal(command string, args []string, outFile *os.File) bool {
 	path, err := exec.LookPath(command)
 	if err != nil {
 		return false
@@ -154,7 +182,7 @@ func runExternal(command string, args []string) bool {
 	name := filepath.Base(path)
 
 	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
+	cmd.Stdout = outFile
 	cmd.Stderr = os.Stderr
 
 	_ = cmd.Run()
