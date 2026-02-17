@@ -45,7 +45,7 @@ func main() {
 			outFile = f // write to file instead
 		}
 
-		errFile := os.Stdout 
+		errFile := os.Stderr 
 		if stdErrFile != "" {
 			f, err := os.Create(stdErrFile)
 			if err != nil {
@@ -53,7 +53,7 @@ func main() {
 				continue
 			}
 			defer f.Close()
-			outFile = f // write to file instead
+			 errFile = f // write to file instead
 		}
 
 		command := words[0]
@@ -66,7 +66,7 @@ func main() {
 
 		// Handle echo command
 		case "echo":
-			fmt.Fprintln(outFile, errFile, strings.Join(words[1:], " "))
+			fmt.Fprintln(outFile, strings.Join(words[1:], " "))
 			continue
 
 		// Handle type command
