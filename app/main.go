@@ -101,7 +101,7 @@ func getRedirect(words []string) ([]string, string, string) {
         if w == ">" || w == "1>" || w == ">>" || w == "1>>" {
             return words[:i], words[i+1], ""          
         }
-        if w == "2>" {
+        if w == "2>" || w == "2>>" {
             return words[:i], "", words[i+1]          
         }
 		
