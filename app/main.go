@@ -1,29 +1,52 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/chzyer/readline"
 )
 
 // Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
 var _ = fmt.Print
 
+
+
+
+
 func main() {
+      // buildinig the completer engine 
+	  completer := readline.NewPrefixCompleter(
+		readline.PcItem("echo"),
+		readline.PcItem("exit"),
+	  )
+
+	  rl, err := readline.NewEx(&readline.Config{
+		Prompt: "$ ",
+		AutoComplete: completer,
+		HistoryFile: "/tmp/myshell.tmp",
+	  })
+
+	  if err != nil {
+		panic(err)
+	}
+	defer rl.Close()
+
+
+
 	// TODO: Uncomment the code below to pass the first stage
-	scanner := bufio.NewScanner(os.Stdin)
-
 	for {
-		fmt.Print("$ ")
-
-		if !scanner.Scan() {
-			return
-		}
-
-		line := scanner.Text()
+    line, err := rl.Readline()
+    if err == readline.ErrInterrupt {
+        continue
+    }
+    if err == io.EOF {
+        break
+    }
 		words := parsefunction(line)
 
 		// Skip empty input
