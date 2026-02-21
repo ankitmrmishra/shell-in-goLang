@@ -124,7 +124,7 @@ func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
 
     for _, cmd := range commands {
         if strings.HasPrefix(cmd, input) {
-            matches = append(matches, []rune(cmd+" "))
+            matches = append(matches, []rune(cmd))
         }
     }
 
