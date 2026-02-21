@@ -116,15 +116,21 @@ func main() {
 
 // creating the autocomplete thing 
 func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
-    input := string(line[:pos])
+   
+
+	 start := pos
+    for start > 0 && line[start-1] != ' ' {
+        start--
+    }
+
+    prefix := string(line[start:pos])
 
     commands := []string{"echo", "exit"}
-
     var matches [][]rune
 
     for _, cmd := range commands {
-        if strings.HasPrefix(cmd, input) {
-            matches = append(matches, []rune(cmd))
+        if strings.HasPrefix(cmd, prefix) {
+            matches = append(matches, []rune(cmd+" "))
         }
     }
 
@@ -134,7 +140,7 @@ func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
         return nil, 0
     }
 
-    return matches, len(input)
+    return matches, len(prefix)
 }
 
 
