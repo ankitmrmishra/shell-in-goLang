@@ -116,11 +116,15 @@ func main() {
 
 // creating the autocomplete thing 
 func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
-   
-
-	 start := pos
+    // Find start of current word
+    start := pos
     for start > 0 && line[start-1] != ' ' {
         start--
+    }
+
+    // 🚨 ONLY complete first word (CodeCrafters requirement)
+    if start != 0 {
+        return nil, 0
     }
 
     prefix := string(line[start:pos])
@@ -134,9 +138,8 @@ func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
         }
     }
 
-    // 🚨 NO MATCH CASE (your requirement)
     if len(matches) == 0 {
-        fmt.Fprintln(os.Stderr, "\x07")
+        fmt.Fprint(os.Stderr, "\a")
         return nil, 0
     }
 
