@@ -20,14 +20,11 @@ type MyCompleter struct{}
 
 func main() {
       // buildinig the completer engine 
-	  completer := readline.NewPrefixCompleter(
-		readline.PcItem("echo"),
-		readline.PcItem("exit"),
-	  )
+	  
 
 	  rl, err := readline.NewEx(&readline.Config{
 		Prompt: "$ ",
-		AutoComplete: completer,
+		AutoComplete: &MyCompleter{},
 		HistoryFile: "/tmp/myshell.tmp",
 	  })
 
