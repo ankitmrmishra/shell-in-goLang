@@ -16,7 +16,7 @@ var _ = fmt.Print
 
 
 
-
+type MyCompleter struct{}
 
 func main() {
       // buildinig the completer engine 
@@ -115,6 +115,32 @@ func main() {
 		fmt.Println(command + ": command not found")
 	}
 }
+
+
+// creating the autocomplete thing 
+func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
+    input := string(line[:pos])
+
+    commands := []string{"echo", "exit"}
+
+    var matches [][]rune
+
+    for _, cmd := range commands {
+        if strings.HasPrefix(cmd, input) {
+            matches = append(matches, []rune(cmd+" "))
+        }
+    }
+
+    // 🚨 NO MATCH CASE (your requirement)
+    if len(matches) == 0 {
+        fmt.Fprintln(os.Stderr, "\x07")
+        return nil, 0
+    }
+
+    return matches, len(input)
+}
+
+
 
 
 
