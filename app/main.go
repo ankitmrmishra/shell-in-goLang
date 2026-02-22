@@ -131,8 +131,9 @@ func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
     }
 
     if len(matches) == 0 {
-        return nil, 0
-    }
+    os.Stdout.Write([]byte{'\x07'})  // ring the bell
+    return nil, 0
+}
 
     // length = 0 means "don't delete anything, just append the remaining part"
     return matches, 0
