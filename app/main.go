@@ -116,34 +116,26 @@ func main() {
 
 // creating the autocomplete thing 
 func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
-    // Find start of current word
-    start := pos
-    for start > 0 && line[start-1] != ' ' {
-        start--
-    }
+    input := string(line[:pos])
 
-    // 🚨 ONLY complete first word (CodeCrafters requirement)
-    if start != 0 {
-        return nil, 0
-    }
+    commands := []string{"echo", "exit", "type", "pwd", "cd"}
 
-    prefix := string(line[start:pos])
-
-    commands := []string{"echo", "exit"}
     var matches [][]rune
 
     for _, cmd := range commands {
-        if strings.HasPrefix(cmd, prefix) {
-            matches = append(matches, []rune(cmd+" "))
+        if strings.HasPrefix(cmd, input) {
+            // return only the REMAINING part, not the full command
+            remaining := cmd[len(input):]
+            matches = append(matches, []rune(remaining+" "))
         }
     }
 
     if len(matches) == 0 {
-        fmt.Fprint(os.Stderr, "\a")
         return nil, 0
     }
 
-    return matches, len(prefix)
+    // length = 0 means "don't delete anything, just append the remaining part"
+    return matches, 0
 }
 
 
