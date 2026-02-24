@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/chzyer/readline"
@@ -16,7 +17,10 @@ var _ = fmt.Print
 
 
 
-type MyCompleter struct{}
+type MyCompleter struct {
+	lastInput string
+	tabCount  int
+}
 
 func main() {
       // buildinig the completer engine 
@@ -118,16 +122,22 @@ func main() {
 func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	input := string(line[:pos])
 
+	// ---------- reset tab count if input changed ----------
+	if input != c.lastInput {
+		c.tabCount = 0
+		c.lastInput = input
+	}
+	c.tabCount++
+
 	commands := []string{"echo", "exit", "type", "pwd", "cd"}
 
 	seen := make(map[string]bool)
-	var matches [][]rune
+	var names []string
 
 	// ---------- builtins ----------
 	for _, cmd := range commands {
 		if strings.HasPrefix(cmd, input) {
-			remaining := cmd[len(input):]
-			matches = append(matches, []rune(remaining+" "))
+			names = append(names, cmd)
 			seen[cmd] = true
 		}
 	}
@@ -139,7 +149,7 @@ func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	for _, dir := range dirs {
 		info, err := os.Stat(dir)
 		if err != nil || !info.IsDir() {
-			continue // handle non-existent dirs gracefully
+			continue
 		}
 
 		entries, err := os.ReadDir(dir)
@@ -150,17 +160,14 @@ func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
 		for _, entry := range entries {
 			name := entry.Name()
 
-			// skip duplicates
 			if seen[name] {
 				continue
 			}
 
-			// prefix match
 			if !strings.HasPrefix(name, input) {
 				continue
 			}
 
-			// check executable bit
 			fullPath := filepath.Join(dir, name)
 			fileInfo, err := os.Stat(fullPath)
 			if err != nil {
@@ -168,22 +175,48 @@ func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
 			}
 
 			if fileInfo.Mode()&0111 == 0 {
-				continue // not executable
+				continue
 			}
 
-			remaining := name[len(input):]
-			matches = append(matches, []rune(remaining+" "))
+			names = append(names, name)
 			seen[name] = true
 		}
 	}
 
 	// ---------- no matches ----------
-	if len(matches) == 0 {
+	if len(names) == 0 {
 		os.Stdout.Write([]byte{'\x07'})
 		return nil, 0
 	}
 
-	return matches, 0
+	// ---------- single match (auto-complete) ----------
+	if len(names) == 1 {
+		c.tabCount = 0
+		remaining := names[0][len(input):]
+		return [][]rune{[]rune(remaining + " ")}, 0
+	}
+
+	// ---------- multiple matches ----------
+	if c.tabCount == 1 {
+		// first TAB → bell only
+		os.Stdout.Write([]byte{'\x07'})
+		return nil, 0
+	}
+
+	// second TAB → print matches
+	sort.Strings(names)
+
+	fmt.Print("\n")
+	for i, name := range names {
+		if i > 0 {
+			fmt.Print("  ")
+		}
+		fmt.Print(name)
+	}
+	fmt.Print("\n$ " + input)
+
+	c.tabCount = 0
+	return nil, 0
 }
 
 
