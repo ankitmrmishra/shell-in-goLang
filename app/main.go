@@ -116,27 +116,74 @@ func main() {
 
 // creating the autocomplete thing 
 func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
-    input := string(line[:pos])
+	input := string(line[:pos])
 
-    commands := []string{"echo", "exit", "type", "pwd", "cd"}
+	commands := []string{"echo", "exit", "type", "pwd", "cd"}
 
-    var matches [][]rune
+	seen := make(map[string]bool)
+	var matches [][]rune
 
-    for _, cmd := range commands {
-        if strings.HasPrefix(cmd, input) {
-            // return only the REMAINING part, not the full command
-            remaining := cmd[len(input):]
-            matches = append(matches, []rune(remaining+" "))
-        }
-    }
+	// ---------- builtins ----------
+	for _, cmd := range commands {
+		if strings.HasPrefix(cmd, input) {
+			remaining := cmd[len(input):]
+			matches = append(matches, []rune(remaining+" "))
+			seen[cmd] = true
+		}
+	}
 
-    if len(matches) == 0 {
-    os.Stdout.Write([]byte{'\x07'})  // ring the bell
-    return nil, 0
-}
+	// ---------- PATH executables ----------
+	pathEnv := os.Getenv("PATH")
+	dirs := strings.Split(pathEnv, ":")
 
-    // length = 0 means "don't delete anything, just append the remaining part"
-    return matches, 0
+	for _, dir := range dirs {
+		info, err := os.Stat(dir)
+		if err != nil || !info.IsDir() {
+			continue // handle non-existent dirs gracefully
+		}
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+
+		for _, entry := range entries {
+			name := entry.Name()
+
+			// skip duplicates
+			if seen[name] {
+				continue
+			}
+
+			// prefix match
+			if !strings.HasPrefix(name, input) {
+				continue
+			}
+
+			// check executable bit
+			fullPath := filepath.Join(dir, name)
+			fileInfo, err := os.Stat(fullPath)
+			if err != nil {
+				continue
+			}
+
+			if fileInfo.Mode()&0111 == 0 {
+				continue // not executable
+			}
+
+			remaining := name[len(input):]
+			matches = append(matches, []rune(remaining+" "))
+			seen[name] = true
+		}
+	}
+
+	// ---------- no matches ----------
+	if len(matches) == 0 {
+		os.Stdout.Write([]byte{'\x07'})
+		return nil, 0
+	}
+
+	return matches, 0
 }
 
 
