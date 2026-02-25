@@ -118,6 +118,27 @@ func main() {
 }
 
 
+
+// to check the longst common prefix in the given set of commands 
+func longestCommonPrefix(strs []string) string {
+	if len(strs) == 0 {
+		return ""
+	}
+
+	prefix := strs[0]
+
+	for _, s := range strs[1:] {
+		for !strings.HasPrefix(s, prefix) {
+			if prefix == "" {
+				return ""
+			}
+			prefix = prefix[:len(prefix)-1]
+		}
+	}
+
+	return prefix
+}
+
 // creating the autocomplete thing 
 func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	input := string(line[:pos])
@@ -195,6 +216,16 @@ func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
 		remaining := names[0][len(input):]
 		return [][]rune{[]rune(remaining + " ")}, 0
 	}
+
+	sort.Strings(names)
+lcp := longestCommonPrefix(names)
+
+if len(lcp) > len(input) {
+	// we can extend the user's input
+	c.tabCount = 0
+	remaining := lcp[len(input):]
+	return [][]rune{[]rune(remaining)}, 0
+}
 
 	// ---------- multiple matches ----------
 	if c.tabCount == 1 {
