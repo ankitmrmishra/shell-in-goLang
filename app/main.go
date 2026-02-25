@@ -1,34 +1,83 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
+
+	"github.com/chzyer/readline"
 )
 
 // Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
 var _ = fmt.Print
 
+
+
+type MyCompleter struct {
+	lastInput string
+	tabCount  int
+}
+
 func main() {
+      // buildinig the completer engine 
+	  
+
+	  rl, err := readline.NewEx(&readline.Config{
+		Prompt: "$ ",
+		AutoComplete: &MyCompleter{},
+		HistoryFile: "/tmp/myshell.tmp",
+	  })
+
+	  if err != nil {
+		panic(err)
+	}
+	defer rl.Close()
+
+
+
 	// TODO: Uncomment the code below to pass the first stage
-	scanner := bufio.NewScanner(os.Stdin)
-
 	for {
-		fmt.Print("$ ")
-
-		if !scanner.Scan() {
-			return
-		}
-
-		line := scanner.Text()
-		words := strings.Fields(line)
+    line, err := rl.Readline()
+    if err == readline.ErrInterrupt {
+        continue
+    }
+    if err == io.EOF {
+        break
+    }
+		words := parsefunction(line)
 
 		// Skip empty input
 		if len(words) == 0 {
 			continue
+		}
+
+		words, stdOutFile, stdErrFile := getRedirect(words)
+
+	
+		outFile := os.Stdout 
+		if stdOutFile != "" {
+		    f, err := os.OpenFile(stdOutFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				fmt.Println("Error:", err)
+				continue
+			}
+			defer f.Close()
+			outFile = f // write to file instead
+		}
+
+		errFile := os.Stderr 
+		if stdErrFile != "" {
+		    f, err := os.OpenFile(stdErrFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				fmt.Println("Error:", err)
+				continue
+			}
+			defer f.Close()
+			 errFile = f // write to file instead
 		}
 
 		command := words[0]
@@ -41,7 +90,7 @@ func main() {
 
 		// Handle echo command
 		case "echo":
-			fmt.Println(strings.Join(words[1:], " "))
+			fmt.Fprintln(outFile, strings.Join(words[1:], " "))
 			continue
 
 		// Handle type command
@@ -59,7 +108,7 @@ func main() {
 	
 
 		// Handle external commands
-		if runExternal(command, words[1:]) {
+		if runExternal(command, words[1:], outFile, errFile) {
 			continue
 		}
 
@@ -67,6 +116,212 @@ func main() {
 		fmt.Println(command + ": command not found")
 	}
 }
+
+
+
+// to check the longst common prefix in the given set of commands 
+func longestCommonPrefix(strs []string) string {
+	if len(strs) == 0 {
+		return ""
+	}
+
+	prefix := strs[0]
+
+	for _, s := range strs[1:] {
+		for !strings.HasPrefix(s, prefix) {
+			if prefix == "" {
+				return ""
+			}
+			prefix = prefix[:len(prefix)-1]
+		}
+	}
+
+	return prefix
+}
+
+// creating the autocomplete thing 
+func (c *MyCompleter) Do(line []rune, pos int) ([][]rune, int) {
+	input := string(line[:pos])
+
+	// ---------- reset tab count if input changed ----------
+	if input != c.lastInput {
+		c.tabCount = 0
+		c.lastInput = input
+	}
+	c.tabCount++
+
+	commands := []string{"echo", "exit", "type", "pwd", "cd"}
+
+	seen := make(map[string]bool)
+	var names []string
+
+	// ---------- builtins ----------
+	for _, cmd := range commands {
+		if strings.HasPrefix(cmd, input) {
+			names = append(names, cmd)
+			seen[cmd] = true
+		}
+	}
+
+	// ---------- PATH executables ----------
+	pathEnv := os.Getenv("PATH")
+	dirs := strings.Split(pathEnv, ":")
+
+	for _, dir := range dirs {
+		info, err := os.Stat(dir)
+		if err != nil || !info.IsDir() {
+			continue
+		}
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+
+		for _, entry := range entries {
+			name := entry.Name()
+
+			if seen[name] {
+				continue
+			}
+
+			if !strings.HasPrefix(name, input) {
+				continue
+			}
+
+			fullPath := filepath.Join(dir, name)
+			fileInfo, err := os.Stat(fullPath)
+			if err != nil {
+				continue
+			}
+
+			if fileInfo.Mode()&0111 == 0 {
+				continue
+			}
+
+			names = append(names, name)
+			seen[name] = true
+		}
+	}
+
+	// ---------- no matches ----------
+	if len(names) == 0 {
+		os.Stdout.Write([]byte{'\x07'})
+		return nil, 0
+	}
+
+	// ---------- single match (auto-complete) ----------
+	if len(names) == 1 {
+		c.tabCount = 0
+		remaining := names[0][len(input):]
+		return [][]rune{[]rune(remaining + " ")}, 0
+	}
+
+	sort.Strings(names)
+lcp := longestCommonPrefix(names)
+
+if len(lcp) > len(input) {
+	// we can extend the user's input
+	c.tabCount = 0
+	remaining := lcp[len(input):]
+	return [][]rune{[]rune(remaining)}, 0
+}
+
+	// ---------- multiple matches ----------
+	if c.tabCount == 1 {
+		// first TAB → bell only
+		os.Stdout.Write([]byte{'\x07'})
+		return nil, 0
+	}
+
+	// second TAB → print matches
+	sort.Strings(names)
+
+	fmt.Print("\n")
+	for i, name := range names {
+		if i > 0 {
+			fmt.Print("  ")
+		}
+		fmt.Print(name)
+	}
+	fmt.Print("\n$ " + input)
+
+	c.tabCount = 0
+	return nil, 0
+}
+
+
+
+
+
+// to get the redirect file name and text 
+func getRedirect(words []string) ([]string, string, string) {
+    for i, w := range words {
+        if w == ">" || w == "1>" || w == ">>" || w == "1>>" {
+            return words[:i], words[i+1], ""          
+        }
+        if w == "2>" || w == "2>>" {
+            return words[:i], "", words[i+1]          
+        }
+		
+    }
+    return words, "", ""
+}
+
+// parsing the single quotes here 
+func parsefunction(line string) []string{
+	var words []string
+    var currentWord strings.Builder
+	inSingleQuote := false
+	inDoubleQuote := false
+
+	for i := 0; i <len(line); i++{
+		ch := line[i]
+        if ch == '\\' && !inDoubleQuote && !inSingleQuote {
+          i++  // Move to next character
+       if i < len(line) {
+           // Add the next character literally
+           currentWord.WriteByte(line[i])
+       }
+       continue
+		} else if  ch == '\\' && inDoubleQuote  {
+        // Look at the NEXT character
+        if i+1 < len(line) {
+            nextCh := line[i+1]
+            // Only escape specific characters
+            if nextCh == '"' || nextCh == '\\' {
+                i++ // Skip the backslash
+                currentWord.WriteByte(nextCh) // Add the escaped char
+                continue
+            }
+        }
+        // If not escaping special char, add backslash literally
+        currentWord.WriteByte(ch)
+        continue
+    } else if ch == '\'' && !inDoubleQuote  {
+           inSingleQuote = !inSingleQuote
+		} else if ch == '"' && !inSingleQuote {
+         inDoubleQuote = !inDoubleQuote
+		} else if inSingleQuote || inDoubleQuote{
+			currentWord.WriteByte(ch)
+		} else if ch == ' ' || ch == '\t'{
+			if currentWord.Len() > 0 {
+				words = append(words, currentWord.String())
+				currentWord.Reset()
+			}
+		} else {
+			// Regular character outside quotes
+			currentWord.WriteByte(ch)
+		}
+	}
+	if currentWord.Len() > 0 {
+		words = append(words, currentWord.String())
+	}
+
+	return words
+}
+
+
 
 // handleType processes the `type` builtin command
 func handleType(words []string) {
@@ -90,7 +345,7 @@ func handleType(words []string) {
 }
 
 // runExternal tries to execute an external program
-func runExternal(command string, args []string) bool {
+func runExternal(command string, args []string, outFile *os.File, errFile *os.File) bool {
 	path, err := exec.LookPath(command)
 	if err != nil {
 		return false
@@ -99,8 +354,8 @@ func runExternal(command string, args []string) bool {
 	name := filepath.Base(path)
 
 	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = outFile
+	cmd.Stderr = errFile
 
 	_ = cmd.Run()
 	return true
@@ -130,13 +385,17 @@ func handlePwd()  {
 }
 
 func changeDirectoray(dir string) {
+	if dir == "~"{
+        path, _ := os.UserHomeDir()
+		os.Chdir(path)
+		return
+	}
 	
-	os.Chdir(dir)
-	path, err := os.Getwd()
+	_, err := os.Stat(dir)
     if err != nil {
-        fmt.Println("pwd:", err)
+        fmt.Println("cd: " + dir + ": No such file or directory")
         return
     }
-    fmt.Println(path)
+ os.Chdir(dir)
 
 }
